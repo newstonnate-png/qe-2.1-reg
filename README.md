@@ -20,7 +20,7 @@ never sends graph structure.
 
     repo:   https://github.com/newstonnate-png/qwen-2.1-runpod-serverless
     branch: spec/v1-worker
-    commit: 006c456885e322aea7903e06c3d3c872308bc071
+    commit: 06aebd9c1e32650be77d18b66ce84f9ee4a2aef0
 
 That commit is the source of truth. This repository is a **mirror**: it is published from that
 commit and never edited in place, so a result a Worker returns can be traced back to something
@@ -37,6 +37,6 @@ sampler settings, steps, cfg and model filenames — no prompts and no images.
 
 | Name | Version | Graph hash | Parameters |
 |---|---|---|---|
-| `background_removal` | 1.0.0 | `eb843315078e` | `prompt`, `reference_images`, `seed`, `steps` |
-| `edit` | 1.0.0 | `7cfe57cedde9` | `loras`, `prompt`, `reference_images`, `sampler_name`, `scheduler`, `seed`, `steps` |
-| `t2i` | 1.0.0 | `387d897d7cf0` | `aspect_ratio`, `loras`, `megapixels`, `prompt`, `sampler_name`, `scheduler`, `seed`, `steps` |
+| `background_removal` | 1.0.0 | `eb843315078e` | `cfg`, `denoise`, `prompt`, `reference_images`, `seed`, `steps` |
+| `edit` | 1.0.0 | `7cfe57cedde9` | `cfg`, `denoise`, `loras`, `prompt`, `reference_images`, `sampler_name`, `scheduler`, `seed`, `steps` |
+| `t2i` | 1.0.0 | `387d897d7cf0` | `aspect_ratio`, `cfg`, `loras`, `megapixels`, `prompt`, `sampler_name`, `scheduler`, `seed`, `steps` |

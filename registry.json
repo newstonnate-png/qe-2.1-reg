@@ -2,7 +2,7 @@
   "schema": 1,
   "source": {
     "branch": "spec/v1-worker",
-    "commit": "006c456885e322aea7903e06c3d3c872308bc071",
+    "commit": "06aebd9c1e32650be77d18b66ce84f9ee4a2aef0",
     "repo": "https://github.com/newstonnate-png/qwen-2.1-runpod-serverless"
   },
   "workflows": {
@@ -183,6 +183,28 @@
       "graph_hash": "eb843315078e3ce0986c5f94a11917a66ff2900da35834cfe6141b3e750a8c42",
       "name": "background_removal",
       "parameters": {
+        "cfg": {
+          "default": 1,
+          "targets": [
+            {
+              "input": "cfg",
+              "node": "459:458"
+            }
+          ],
+          "type": "number"
+        },
+        "denoise": {
+          "default": 1.0,
+          "max": 1.0,
+          "min": 0.0,
+          "targets": [
+            {
+              "input": "denoise",
+              "node": "459:458"
+            }
+          ],
+          "type": "number"
+        },
         "prompt": {
           "targets": [
             {
@@ -527,6 +549,28 @@
       "graph_hash": "7cfe57cedde9b2af695bf34f2575efa634f34ce72ce73f23c282eaa5ea8add4b",
       "name": "edit",
       "parameters": {
+        "cfg": {
+          "default": 1,
+          "targets": [
+            {
+              "input": "cfg",
+              "node": "459:458"
+            }
+          ],
+          "type": "number"
+        },
+        "denoise": {
+          "default": 1.0,
+          "max": 1.0,
+          "min": 0.0,
+          "targets": [
+            {
+              "input": "denoise",
+              "node": "459:458"
+            }
+          ],
+          "type": "number"
+        },
         "loras": {
           "max_file_bytes": 1073741824,
           "min": 0,
@@ -957,6 +1001,16 @@
             "16:9 (Widescreen)",
             "21:9 (Ultrawide)"
           ]
+        },
+        "cfg": {
+          "default": 1,
+          "targets": [
+            {
+              "input": "cfg",
+              "node": "459:458"
+            }
+          ],
+          "type": "number"
         },
         "loras": {
           "max_file_bytes": 1073741824,
