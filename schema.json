@@ -53,6 +53,13 @@
         "take": {
           "enum": ["all", "first"],
           "description": "How many of the supplied values this target receives. `all` writes one slot per value. `first` wires the target to the first emitted node alone, which is what a node comparing the result against the original needs; it is safe because the Parameter declares a floor, so there is always a first value to take. Declared on every target of an emitting Parameter rather than defaulted, so the artifact has one form and the engine has nothing to guess."
+        },
+        "flexible": {
+          "type": "object",
+          "required": ["class_type"],
+          "additionalProperties": false,
+          "description": "The node accepts a FAMILY of input names its own schema does not publish, and this target names that family. `Power Lora Loader (rgthree)` returns FlexibleOptionalInputType from INPUT_TYPES, so /object_info publishes `model` and `clip` and nothing else while `load_loras` reads every `lora_N` kwarg it is handed - measured at the SHA the Dockerfile pins, and unanswerable from this side of the seam. So the claim is authored here rather than derived, and it is honoured only where all three of these hold: the claim is on this target, the node's class IS the one named, and the name written is one this target's pattern expands to. A claim on the wrong node, the wrong class or the wrong spelling therefore fails generation and fails the Job rather than injecting a name nothing reads.",
+          "properties": { "class_type": { "type": "string", "minLength": 1 } }
         }
       },
       "allOf": [
@@ -63,6 +70,13 @@
         {
           "if": { "required": ["from"] },
           "then": { "properties": { "input": { "pattern": "\\{n\\}" } } }
+        },
+        {
+          "if": { "required": ["flexible"] },
+          "then": {
+            "required": ["from", "take"],
+            "properties": { "take": { "const": "all" } }
+          }
         }
       ]
     },
@@ -72,8 +86,8 @@
       "additionalProperties": false,
       "properties": {
         "type": {
-          "enum": ["string", "integer", "number", "boolean", "array", "images"],
-          "description": "The caller's contract for the values a Job supplies. Not a Python type. `images` is the one value the Worker ACTS on rather than reads: the values are pictures, which cannot cross as values at all - the Worker decodes each one, writes it into the engine's input directory before the graph is submitted, and puts the name it landed under into the node the declaration emits. So an `images` Parameter must also declare `emits`, and the token in that node's inputs stands for the uploaded name rather than the bytes (ADR-0009)."
+          "enum": ["string", "integer", "number", "boolean", "array", "images", "loras"],
+          "description": "The caller's contract for the values a Job supplies. Not a Python type. `images` and `loras` are the two types the Worker ACTS on rather than reads. An `images` value is a picture, which cannot cross as a value at all: the Worker decodes each one, writes it into the engine's input directory before the graph is submitted, and puts the name it landed under into the node the declaration emits - so an `images` Parameter must also declare `emits`, and the token in that node's inputs stands for the uploaded name rather than the bytes (ADR-0009). A `loras` value is a URL and a strength: the Worker fetches the URL into a directory the engine already searches, and writes into each slot a structured value the declaration's `slot` template builds from the filename the fetch produced - so a `loras` Parameter must also declare `slot`, and a ceiling on one fetched file in `max_file_bytes`, because a Fetch is the one path where the caller rather than this repo names the machine the bytes come from (ADR-0011)."
         },
         "default": {
           "description": "Applied when a Job omits the Parameter. Absent means the Parameter is required, which is the case for seed: the Worker resolves it, so a default would be a lie."
@@ -101,6 +115,16 @@
             }
           }
         },
+        "max_file_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The largest ONE FILE a value of this Parameter may fetch, in bytes, refused before the body is read. A bound of a different kind from `min`/`max`, which count values: this one bounds one value's size, and it is required on a `loras` Parameter because the Worker fetches whatever URL the caller named. The caller chooses that URL, so an oversized file is the caller's own mistake and the Worker names both numbers rather than letting a host hold the Worker by dribbling bytes - a socket timeout bounds silence, not the total. Declared rather than fixed inside the fetch so the contract carries it: Civitai's metadata route is public and reports a file's size, so an interface can pre-check a LoRA before spending a Job on it. Absent means the Parameter does not fetch anything large, and the Worker refuses a `loras` Parameter that declares none rather than fetching unbounded."
+        },
+        "slot": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "The object written into one slot per supplied value, for a Parameter whose values the Worker BUILDS rather than passes through. It is the sibling of `emits` and the other half of the same idea: `emits` says which node each value becomes, `slot` says what each value says where it lands. A string in the template is a template - {value} stands for the name the Worker's own act produced (the filename a Fetch wrote) and {strength} for the strength the Job asked for - and any other value is the constant it looks like, which is how a LoRA slot stays switched on. The template's keys are the TARGET NODE's vocabulary rather than this schema's, which is why they are not enumerated here; rgthree's loader skips any value missing `on`, `lora` or `strength`, in silence, so they are pinned by a test against the class's own source instead. A Parameter that declares `slot` writes a name per value, so every target must carry a slot pattern: there is no fixed input that could hold more than one."
+        },
         "targets": {
           "type": "array",
           "minItems": 1,
@@ -111,7 +135,25 @@
       "allOf": [
         {
           "if": { "properties": { "type": { "const": "images" } } },
-          "then": { "required": ["emits"] }
+          "then": { "required": ["emits"], "not": { "required": ["slot"] } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "loras" } } },
+          "then": { "required": ["slot", "max_file_bytes"], "not": { "required": ["emits"] } }
+        },
+        {
+          "if": { "required": ["max_file_bytes"] },
+          "then": { "properties": { "type": { "const": "loras" } } }
+        },
+        {
+          "if": { "required": ["slot"] },
+          "then": {
+            "properties": {
+              "targets": {
+                "items": { "required": ["from", "take"], "properties": { "take": { "const": "all" } } }
+              }
+            }
+          }
         }
       ]
     },

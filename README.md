@@ -20,7 +20,7 @@ never sends graph structure.
 
     repo:   https://github.com/newstonnate-png/qwen-2.1-runpod-serverless
     branch: spec/v1-worker
-    commit: 6faa9228ee4fad4e33546494eda2ff044b7b0c6f
+    commit: 57958b9c9ab5f6d098e511471e7e3575bf1f5e93
 
 That commit is the source of truth. This repository is a **mirror**: it is published from that
 commit and never edited in place, so a result a Worker returns can be traced back to something
@@ -38,5 +38,5 @@ sampler settings, steps, cfg and model filenames — no prompts and no images.
 | Name | Version | Graph hash | Parameters |
 |---|---|---|---|
 | `background_removal` | 1.0.0 | `eb843315078e` | `prompt`, `reference_images`, `seed`, `steps` |
-| `edit` | 1.0.0 | `7cfe57cedde9` | `prompt`, `reference_images`, `seed`, `steps` |
-| `t2i` | 1.0.0 | `387d897d7cf0` | `aspect_ratio`, `megapixels`, `prompt`, `seed`, `steps` |
+| `edit` | 1.0.0 | `7cfe57cedde9` | `loras`, `prompt`, `reference_images`, `seed`, `steps` |
+| `t2i` | 1.0.0 | `387d897d7cf0` | `aspect_ratio`, `loras`, `megapixels`, `prompt`, `seed`, `steps` |

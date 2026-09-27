@@ -2,7 +2,7 @@
   "schema": 1,
   "source": {
     "branch": "spec/v1-worker",
-    "commit": "6faa9228ee4fad4e33546494eda2ff044b7b0c6f",
+    "commit": "57958b9c9ab5f6d098e511471e7e3575bf1f5e93",
     "repo": "https://github.com/newstonnate-png/qwen-2.1-runpod-serverless"
   },
   "workflows": {
@@ -527,6 +527,27 @@
       "graph_hash": "7cfe57cedde9b2af695bf34f2575efa634f34ce72ce73f23c282eaa5ea8add4b",
       "name": "edit",
       "parameters": {
+        "loras": {
+          "max_file_bytes": 1073741824,
+          "min": 0,
+          "slot": {
+            "lora": "{value}",
+            "on": true,
+            "strength": "{strength}"
+          },
+          "targets": [
+            {
+              "flexible": {
+                "class_type": "Power Lora Loader (rgthree)"
+              },
+              "from": 1,
+              "input": "lora_{n}",
+              "node": "459:501",
+              "take": "all"
+            }
+          ],
+          "type": "loras"
+        },
         "prompt": {
           "targets": [
             {
@@ -851,6 +872,27 @@
             }
           ],
           "type": "string"
+        },
+        "loras": {
+          "max_file_bytes": 1073741824,
+          "min": 0,
+          "slot": {
+            "lora": "{value}",
+            "on": true,
+            "strength": "{strength}"
+          },
+          "targets": [
+            {
+              "flexible": {
+                "class_type": "Power Lora Loader (rgthree)"
+              },
+              "from": 1,
+              "input": "lora_{n}",
+              "node": "459:483",
+              "take": "all"
+            }
+          ],
+          "type": "loras"
         },
         "megapixels": {
           "default": 1,
