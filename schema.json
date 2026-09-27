@@ -92,6 +92,14 @@
         "default": {
           "description": "Applied when a Job omits the Parameter. Absent means the Parameter is required, which is the case for seed: the Worker resolves it, so a default would be a lie."
         },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "The exact set of values a Job may supply, and the `default` is required to be one of them. This exists because some node inputs are the ENGINE's enum rather than free text - `aspect_ratio`, `sampler_name` and `scheduler` are all combo widgets whose option list lives in the engine and is not published in the graph. A name outside the set is a KeyError inside the node's `execute`, so the run dies and the Job reports `generation_failed` naming nothing the caller can act on; declaring the set turns that into `invalid_request` naming the value, refused before submission and before a worker is paid. All three now carry it, `aspect_ratio` included - it was the first to go out without one and cost a billed Job to find out. The list is the engine's, transcribed at the pinned ComfyUI tag, so a tag bump makes it stale in the permissive direction - refusing a value the engine would have accepted - which is why a test pins each list's length."
+        },
         "min": {
           "type": "integer",
           "minimum": 0,
