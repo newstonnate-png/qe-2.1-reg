@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/newstonnate-png/qwen-2.1-runpod-serverless/registry/schema.json",
+  "title": "Registry",
+  "description": "The artifact a Worker fetches to learn which Workflows it can run (ADR-0007). It names the Workflows this repo owns, carries each one's Node graph in API format, and declares the Parameters that graph exposes. Generated from the exports by registry/generate.py and never hand-written; validation of what a schema cannot express - that a Parameter's target really exists in the graph naming it - lives in generate.py's problems().",
+  "type": "object",
+  "required": ["schema", "source", "workflows"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": 1,
+      "description": "The artifact's own version. Bumped when the shape changes incompatibly."
+    },
+    "source": {
+      "type": "object",
+      "required": ["repo", "branch", "commit"],
+      "additionalProperties": false,
+      "description": "Where this artifact came from, so a published copy traces back to a reviewed commit.",
+      "properties": {
+        "repo": { "type": ["string", "null"] },
+        "branch": { "type": ["string", "null"] },
+        "commit": {
+          "type": ["string", "null"],
+          "description": "Stamped at publication. Null means generated but not yet published, which is a valid state and not an error."
+        }
+      }
+    },
+    "workflows": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "Keyed by the name a Job uses to ask for a Workflow. The key and the entry's own name must agree.",
+      "additionalProperties": { "$ref": "#/$defs/workflow" }
+    }
+  },
+  "$defs": {
+    "target": {
+      "type": "object",
+      "required": ["node", "input"],
+      "additionalProperties": false,
+      "description": "One place a Parameter's value is written into the graph.",
+      "properties": {
+        "node": { "type": "string", "minLength": 1 },
+        "input": {
+          "type": "string",
+          "minLength": 1,
+          "description": "An input the node declares. A dotted slot (images.image_1) is acceptable when its container is declared, because that is how an Autogrow input arrives."
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "required": ["type", "targets"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": ["string", "integer", "number", "boolean", "array"],
+          "description": "The caller's contract. Not a Python type."
+        },
+        "default": {
+          "description": "Applied when a Job omits the Parameter. Absent means the Parameter is required, which is the case for seed: the Worker resolves it, so a default would be a lie."
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/target" },
+          "description": "Where the value is written. Always a list, never a single node/input pair with a shorthand: a Workflow carrying the PE enhancer holds the caller's prompt in two places - the enhancer's own input and the switch branch the encoder reads when the enhancer is off - so writing only one of them silently ignores the caller."
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "required": ["name", "version", "graph_hash", "graph", "parameters"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "The human label. It may stay the same across a real change, which is why graph_hash exists beside it."
+        },
+        "graph_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 over the graph alone, canonically serialised. Any node edit changes it; serialisation order does not."
+        },
+        "graph": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "The Node graph in API format: a flat map from node id to a class type and its inputs.",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["class_type"],
+            "properties": {
+              "class_type": { "type": "string", "minLength": 1 },
+              "inputs": { "type": "object" }
+            }
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/parameter" }
+        },
+        "preview_node": {
+          "type": ["string", "null"],
+          "description": "The node whose text output carries the prompt as the encoder finally received it. Present only for a Workflow with an enhancer."
+        }
+      }
+    }
+  }
+}
