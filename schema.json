@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/newstonnate-png/qwen-2.1-runpod-serverless/registry/schema.json",
   "title": "Registry",
-  "description": "The artifact a Worker fetches to learn which Workflows it can run (ADR-0007). It names the Workflows this repo owns, carries each one's Node graph in API format, and declares the Parameters that graph exposes. Generated from the exports by registry/generate.py and never hand-written; validation of what a schema cannot express - that a Parameter's target really exists in the graph naming it - lives in generate.py's problems().",
+  "description": "The artifact a Worker fetches to learn which Workflows it can run (ADR-0007). It names the Workflows this repo owns, carries each one's Node graph in API format, and declares the Parameters that graph exposes. Generated from the exports by registry/generate.py and never hand-written; validation of what a schema cannot express - that a Parameter's target really exists in the graph naming it - lives in generate.py's problems(). A repeatable target is the exception: its input name is checked against the EXPORT, by generate.normalise(), because the published graph no longer carries the keys that named it - removing them is what normalisation is.",
   "type": "object",
   "required": ["schema", "source", "workflows"],
   "additionalProperties": false,
@@ -37,15 +37,34 @@
       "type": "object",
       "required": ["node", "input"],
       "additionalProperties": false,
-      "description": "One place a Parameter's value is written into the graph.",
+      "description": "One place a Parameter's value is written into the graph. A target of a Parameter that emits a node per value carries the repeatable form instead: a slot pattern in `input`, the index it starts from in `from`, and how many of the values it takes in `take`. The pattern is declared rather than chosen by the engine because the two consumers of a reference image do not agree how a slot is named - one is `images.image_1`, the other `images.image0` - and a convention would be wrong for one of them silently.",
       "properties": {
         "node": { "type": "string", "minLength": 1 },
         "input": {
           "type": "string",
           "minLength": 1,
-          "description": "An input the node declares. A dotted slot (images.image_1) is acceptable when its container is declared, because that is how an Autogrow input arrives."
+          "description": "An input the node declares. A dotted slot (images.image_1) is acceptable when its container is declared, because that is how an Autogrow input arrives. For a repeatable target this is a pattern whose {n} token stands for the value's position, spelled the way that node names its slots."
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The index the pattern's first value takes: 1 for a container whose slots are image_1..., 0 for one whose slots are image0.... Required with a pattern and meaningless without one, because the base is a property of the node being written to and no default could be right for both."
+        },
+        "take": {
+          "enum": ["all", "first"],
+          "description": "How many of the supplied values this target receives. `all` writes one slot per value. `first` wires the target to the first emitted node alone, which is what a node comparing the result against the original needs; it is safe because the Parameter declares a floor, so there is always a first value to take. Declared on every target of an emitting Parameter rather than defaulted, so the artifact has one form and the engine has nothing to guess."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "input": { "pattern": "\\{n\\}" } } },
+          "then": { "required": ["from"] }
+        },
+        {
+          "if": { "required": ["from"] },
+          "then": { "properties": { "input": { "pattern": "\\{n\\}" } } }
+        }
+      ]
     },
     "parameter": {
       "type": "object",
@@ -53,11 +72,34 @@
       "additionalProperties": false,
       "properties": {
         "type": {
-          "enum": ["string", "integer", "number", "boolean", "array"],
-          "description": "The caller's contract. Not a Python type."
+          "enum": ["string", "integer", "number", "boolean", "array", "images"],
+          "description": "The caller's contract for the values a Job supplies. Not a Python type. `images` is the one value the Worker ACTS on rather than reads: the values are pictures, which cannot cross as values at all - the Worker decodes each one, writes it into the engine's input directory before the graph is submitted, and puts the name it landed under into the node the declaration emits. So an `images` Parameter must also declare `emits`, and the token in that node's inputs stands for the uploaded name rather than the bytes (ADR-0009)."
         },
         "default": {
           "description": "Applied when a Job omits the Parameter. Absent means the Parameter is required, which is the case for seed: the Worker resolves it, so a default would be a lie."
+        },
+        "min": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The floor: the fewest values a Job may supply, refused before submission. Declared because zero is what the engine's container structurally allows and not what the Workflow means - an edit with no source is an edit of nothing, and a run that proceeded would return a plausible image with the intent silently ignored. Absent means the Parameter has no floor (ADR-0006's harm, and ADR-0002's dated correction to its own 'or none')."
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The ceiling: the most values a Job may supply, refused before submission naming the bound. Declared rather than derived because the bound is the engine container's, and /object_info describes a container without its expanded slot names - those are in the class's source, not in its published schema. For reference_images it is 16: the encoder's Autogrow container declares image_1..image_16, while the batch node feeding the enhancer declares min=1 max=50, and the smaller is the only bound that keeps every consumer looking at the same set. Above it the engine drops the extra slot in silence, so the encoder would ignore references the rest of the graph had already accepted."
+        },
+        "emits": {
+          "type": "object",
+          "required": ["class_type"],
+          "additionalProperties": false,
+          "description": "The node injection emits once per supplied value, which is what makes the Parameter repeatable rather than fixed. An emitted node whose class the engine does not provide, or whose id collides with one the graph already uses, is refused before submission.",
+          "properties": {
+            "class_type": { "type": "string", "minLength": 1 },
+            "inputs": {
+              "type": "object",
+              "description": "The emitted node's inputs. The {value} token stands for the value that node was emitted from."
+            }
+          }
         },
         "targets": {
           "type": "array",
@@ -65,7 +107,13 @@
           "items": { "$ref": "#/$defs/target" },
           "description": "Where the value is written. Always a list, never a single node/input pair with a shorthand: a Workflow carrying the PE enhancer holds the caller's prompt in two places - the enhancer's own input and the switch branch the encoder reads when the enhancer is off - so writing only one of them silently ignores the caller."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "images" } } },
+          "then": { "required": ["emits"] }
+        }
+      ]
     },
     "workflow": {
       "type": "object",

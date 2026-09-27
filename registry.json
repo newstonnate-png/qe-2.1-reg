@@ -2,7 +2,7 @@
   "schema": 1,
   "source": {
     "branch": "spec/v1-worker",
-    "commit": "7b0fa919dabe221c368362a8231d7a62bbe2d1b9",
+    "commit": "53c9410f095c18839dfccc9825222039a12b3eb8",
     "repo": "https://github.com/newstonnate-png/qwen-2.1-runpod-serverless"
   },
   "workflows": {
@@ -136,10 +136,6 @@
               "459:453",
               0
             ],
-            "images.image_1": [
-              "470",
-              0
-            ],
             "negative_prompt": "",
             "prompt": "Remove the background, and output a PNG image",
             "resolution": 0,
@@ -165,15 +161,6 @@
             ]
           }
         },
-        "470": {
-          "_meta": {
-            "title": "Load Image"
-          },
-          "class_type": "LoadImage",
-          "inputs": {
-            "image": "angry_broccoli.png"
-          }
-        },
         "472": {
           "_meta": {
             "title": "Compare Images"
@@ -186,10 +173,6 @@
                 ""
               ]
             },
-            "image_a": [
-              "470",
-              0
-            ],
             "image_b": [
               "461",
               0
@@ -197,7 +180,7 @@
           }
         }
       },
-      "graph_hash": "59ed2c72fc635a3bbccadd8a3ac2d023f9d45798c1035054ab67c415e428f283",
+      "graph_hash": "eb843315078e3ce0986c5f94a11917a66ff2900da35834cfe6141b3e750a8c42",
       "name": "background_removal",
       "parameters": {
         "prompt": {
@@ -208,6 +191,30 @@
             }
           ],
           "type": "string"
+        },
+        "reference_images": {
+          "emits": {
+            "class_type": "LoadImage",
+            "inputs": {
+              "image": "{value}"
+            }
+          },
+          "max": 16,
+          "min": 1,
+          "targets": [
+            {
+              "from": 1,
+              "input": "images.image_{n}",
+              "node": "459:474",
+              "take": "all"
+            },
+            {
+              "input": "image_a",
+              "node": "472",
+              "take": "first"
+            }
+          ],
+          "type": "images"
         },
         "seed": {
           "targets": [
@@ -361,14 +368,6 @@
               "459:453",
               0
             ],
-            "images.image_1": [
-              "470",
-              0
-            ],
-            "images.image_2": [
-              "475",
-              0
-            ],
             "negative_prompt": "",
             "prompt": [
               "459:480",
@@ -432,16 +431,7 @@
             "title": "Batch Images"
           },
           "class_type": "BatchImagesNode",
-          "inputs": {
-            "images.image0": [
-              "470",
-              0
-            ],
-            "images.image1": [
-              "475",
-              0
-            ]
-          }
+          "inputs": {}
         },
         "459:495": {
           "_meta": {
@@ -515,15 +505,6 @@
             ]
           }
         },
-        "470": {
-          "_meta": {
-            "title": "Load Image"
-          },
-          "class_type": "LoadImage",
-          "inputs": {
-            "image": "portrait_model_denim.png"
-          }
-        },
         "472": {
           "_meta": {
             "title": "Compare Images"
@@ -536,27 +517,14 @@
                 ""
               ]
             },
-            "image_a": [
-              "470",
-              0
-            ],
             "image_b": [
               "461",
               0
             ]
           }
-        },
-        "475": {
-          "_meta": {
-            "title": "Load Image"
-          },
-          "class_type": "LoadImage",
-          "inputs": {
-            "image": "clothing_light_blue_denim_shirt.png"
-          }
         }
       },
-      "graph_hash": "b4b7196c2cea8327a882084328b8ce477f46926c3a9b2f6c7c9e0e219f9861f1",
+      "graph_hash": "955a240836d1c96cc69aae616e300145adcd0754e64396d9bb03deb75496cc38",
       "name": "edit",
       "parameters": {
         "prompt": {
@@ -571,6 +539,36 @@
             }
           ],
           "type": "string"
+        },
+        "reference_images": {
+          "emits": {
+            "class_type": "LoadImage",
+            "inputs": {
+              "image": "{value}"
+            }
+          },
+          "max": 16,
+          "min": 1,
+          "targets": [
+            {
+              "from": 1,
+              "input": "images.image_{n}",
+              "node": "459:474",
+              "take": "all"
+            },
+            {
+              "from": 0,
+              "input": "images.image{n}",
+              "node": "459:485",
+              "take": "all"
+            },
+            {
+              "input": "image_a",
+              "node": "472",
+              "take": "first"
+            }
+          ],
+          "type": "images"
         },
         "seed": {
           "targets": [
