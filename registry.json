@@ -2,7 +2,7 @@
   "schema": 1,
   "source": {
     "branch": "spec/v1-worker",
-    "commit": "53c9410f095c18839dfccc9825222039a12b3eb8",
+    "commit": "6faa9228ee4fad4e33546494eda2ff044b7b0c6f",
     "repo": "https://github.com/newstonnate-png/qwen-2.1-runpod-serverless"
   },
   "workflows": {
@@ -423,7 +423,7 @@
               "459:500",
               0
             ],
-            "switch": true
+            "switch": false
           }
         },
         "459:485": {
@@ -524,7 +524,7 @@
           }
         }
       },
-      "graph_hash": "955a240836d1c96cc69aae616e300145adcd0754e64396d9bb03deb75496cc38",
+      "graph_hash": "7cfe57cedde9b2af695bf34f2575efa634f34ce72ce73f23c282eaa5ea8add4b",
       "name": "edit",
       "parameters": {
         "prompt": {
