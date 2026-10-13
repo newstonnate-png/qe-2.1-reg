@@ -15,12 +15,21 @@ never sends graph structure.
 |---|---|
 | `registry.json` | The Registry. This is the file a Worker fetches. |
 | `schema.json` | The JSON Schema `registry.json` validates against. |
+| `contract.json` | The Job contract: the request and response shapes, the limits, and the contract's own identity in `contract_version`. |
+
+## Taking the contract
+
+A calling interface **vendors** `contract.json`: it copies this file at the commit the Release names and
+keeps its own copy. There is no package to install. The file names its human version in
+`contract_version.label`. The exact identity is not stored in the file: it is computed, as
+`contract_version.hash_is` states, as a SHA-256 over the canonical JSON with the `contract_version` block
+removed. A copy is checked by computing that digest and comparing it with the one the Endpoint reports.
 
 ## Where it came from
 
     repo:   https://github.com/newstonnate-png/qwen-2.1-runpod-serverless
     branch: main
-    commit: f43d269f476402a4f89b1e3626f6b335b414ea28
+    commit: fe8ceffec2b864d7ce39bb64dfae1342e2d7fcb4
 
 That commit is the source of truth. This repository is a **mirror**: it is published from that
 commit and never edited in place, so a result a Worker returns can be traced back to something

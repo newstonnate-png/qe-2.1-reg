@@ -8,8 +8,8 @@
   "additionalProperties": false,
   "properties": {
     "schema": {
-      "const": 1,
-      "description": "The artifact's own version. Bumped when the shape changes incompatibly."
+      "const": 2,
+      "description": "The artifact's own version. Bumped when the shape changes incompatibly. Version 2 added the `presentation` copy to each Workflow and to any Parameter that carries it (ADR-0016); a reader of version 1 must refuse it, not read it as version 1."
     },
     "source": {
       "type": "object",
@@ -133,6 +133,9 @@
           "minProperties": 1,
           "description": "The object written into one slot per supplied value, for a Parameter whose values the Worker BUILDS rather than passes through. It is the sibling of `emits` and the other half of the same idea: `emits` says which node each value becomes, `slot` says what each value says where it lands. A string in the template is a template - {value} stands for the name the Worker's own act produced (the filename a Fetch wrote) and {strength} for the strength the Job asked for - and any other value is the constant it looks like, which is how a LoRA slot stays switched on. The template's keys are the TARGET NODE's vocabulary rather than this schema's, which is why they are not enumerated here; rgthree's loader skips any value missing `on`, `lora` or `strength`, in silence, so they are pinned by a test against the class's own source instead. A Parameter that declares `slot` writes a name per value, so every target must carry a slot pattern: there is no fixed input that could hold more than one."
         },
+        "presentation": {
+          "$ref": "#/$defs/parameter_presentation"
+        },
         "targets": {
           "type": "array",
           "minItems": 1,
@@ -167,7 +170,7 @@
     },
     "workflow": {
       "type": "object",
-      "required": ["name", "version", "graph_hash", "graph", "parameters"],
+      "required": ["name", "version", "graph_hash", "graph", "parameters", "presentation"],
       "additionalProperties": false,
       "properties": {
         "name": { "type": "string", "minLength": 1 },
@@ -198,10 +201,34 @@
           "type": "object",
           "additionalProperties": { "$ref": "#/$defs/parameter" }
         },
+        "presentation": {
+          "$ref": "#/$defs/workflow_presentation"
+        },
         "preview_node": {
           "type": ["string", "null"],
           "description": "The node whose text output carries the prompt as the encoder finally received it. Present only for a Workflow with an enhancer."
         }
+      }
+    },
+    "workflow_presentation": {
+      "type": "object",
+      "description": "The human copy a Workflow publishes (ADR-0016): what it is for, in words a person reads. Meaning only. A section, group, order, coordinate, component, icon, style or breakpoint is refused by additionalProperties, not described away.",
+      "required": ["label", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string", "pattern": "\\S", "description": "A short name for the Workflow." },
+        "description": { "type": "string", "pattern": "\\S", "description": "One or two sentences on what the Workflow is for." }
+      }
+    },
+    "parameter_presentation": {
+      "type": "object",
+      "description": "The human copy a Parameter may publish (ADR-0016). Optional on a Parameter: a Parameter without it is valid. Meaning only, as on a Workflow. `importance` says whether a routine form shows the Parameter first, and it is the only thing here that is not prose.",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string", "pattern": "\\S", "description": "A short name for the Parameter." },
+        "description": { "type": "string", "pattern": "\\S", "description": "One sentence on what the Parameter changes." },
+        "importance": { "enum": ["primary", "advanced"], "description": "`primary` is shown first in a routine form; `advanced` is shown behind a disclosure." }
       }
     }
   }

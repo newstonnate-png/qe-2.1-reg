@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/newstonnate-png/qwen-2.1-runpod-serverless/registry/contract.json",
+  "title": "Job contract",
+  "contract_version": {
+    "label": "4.0.0",
+    "label_is": "The human label. It moves when a change is BREAKING and stays put otherwise. 'Breaking' here is STRICT, and the strictness is structural rather than cautious: the response is additionalProperties:false, so ANY field added to it rejects a Result for a caller holding a previous copy of this artifact. A contract cannot relax a constraint someone has already taken a copy of. The request is additionalProperties:false too, so the same holds in the other direction: renaming or removing a request field (`version` became `workflow_version`, label 2.0.0) or adding one moves the label, because a copy that validates outgoing Jobs rejects the new spelling. So a new response field moves the label, an edit confined to prose or to `limits` does not, and a new Registry Parameter never touches it because that is the Registry's version. It is not the identity: a human label can sit unchanged across a real edit, which is exactly what the content hash is here to catch.",
+    "hash": "not stored here — see hash_is. A value written beside the description of itself is a second copy of the fact and drifts the moment the document moves, which is the failure this pair exists to catch. A caller computes it in one line: sha256 over json.dumps(this document minus the contract_version block, sort_keys=True, separators=(',',':')). The Endpoint's build does exactly this (bake_contract_identity.py), and tests/test_contract_version.py re-derives it on the host and compares against what the image carries.",
+    "hash_is": "The exact identity: a SHA-256 over the canonical serialisation of this document, excluding this `contract_version` block — a digest that covered its own record could not be stable. It changes on ANY edit, including a reworded description, which is deliberate: a silent reword is a change the caller would not otherwise notice. Canonical means sort_keys and compact separators, so a formatting change does not read as a contract change; the same treatment registry.generate gives graph_hash.",
+    "who_owns_it": "This repository. The interface vendors this artifact and reads the pair off it, so a behavioural change is explainable rather than mysterious (#36). The pair is published HERE rather than echoed on every Result, because a field on the response would itself be a breaking change — see label_is.",
+    "not_a_url": "Deliberately not a versioned URL path. That would hard-code a version into every route and make the deployed Endpoint the thing that changes, when the description is the thing that versioned."
+  },
+  "description": "How a Job is submitted to this Endpoint and what comes back. It is NOT the Registry: the Registry says which Workflows exist and what Parameters each accepts, and this says how a Job is submitted and what a caller receives. Two artifacts with two version numbers, and conflating them is the first mistake a reader will make (#27, #35). What a given Workflow accepts is the Registry's business and is deliberately not restated here. Every shape below is validated by tests/test_contract_artifact.py against real responses from handler.handler, so it describes what this Endpoint does rather than what it might do. Measured 2026-09-28 across three Workflows on live Jobs; the Job-state and platform behaviour is Runpod's and is named rather than described generically.",
+  "not_in_response": [
+    {
+      "field": "url",
+      "why": "Images travel inline as base64 and always have. A URL form is the object-storage path in ADR-0004/#11, which is not built, so a caller must not code against a field this Endpoint does not send."
+    },
+    {
+      "field": "loras",
+      "why": "A successful response does not name the LoRAs a Job used. #33/L3 wants it and it is not built; a caller cannot read it off this artifact, because it is absent rather than empty."
+    },
+    {
+      "field": "error",
+      "why": "On a Job that produced an image the refusal triple is ABSENT, not null. A caller rendering `retryable: null` beside an image is rendering a question that does not apply (ADR-0010)."
+    },
+    {
+      "field": "duration_ms, cost, gpu, timings",
+      "why": "The Worker does not measure or report them. Runpod accounts for queue and execution time on the Job itself; a value here would be a second, disagreeing number."
+    },
+    {
+      "field": "status",
+      "why": "The response is what a Job RETURNS. A Job's state is the platform's and is read from the Runpod request, not from this artifact — see job_states."
+    }
+  ],
+  "limits": {
+    "note": "The limits a caller plans against, as numbers rather than as rules stated in prose. A caller cannot size a request against a sentence, and a caller who has to discover a ceiling by being refused has already spent a Job to learn arithmetic (#27, stories 22-28). Each figure below is either derived from the thing it describes or marked as the platform's and unmeasured — never asserted flatly.",
+    "payload": {
+      "max_request_bytes": 10485760,
+      "base64_inflation_ratio": 1.3333333333333333,
+      "max_image_bytes": 7864320,
+      "per_image_overhead_bytes": 64,
+      "per_image_overhead_is": "JSON punctuation the Worker charges once per reference image, on top of its base64 body. Published as a number because a form cannot subtract a Python identifier, and as a separate field rather than folded into max_image_bytes so the headroom stays a clean ceiling times 3/4 and the overhead stays visible as what it is. The Worker reads it from handler.REQUEST_BYTES_PER_IMAGE; test_the_per_image_overhead_is_published_as_a_number compares the two.",
+      "is_default": true,
+      "overridable_by": "MAX_REQUEST_BYTES, an environment setting the Worker reads at import",
+      "scope": "one Job Input, summed over every reference image it carries",
+      "per_parameter": false,
+      "measured_against": "A real request body of 2.7 MB, which is where the base64 inflation was checked against a request this size rather than assumed. The exact ratio is 4/3 — three bytes become four characters — so max_image_bytes is the ceiling times 3/4 rather than a separate estimate. It is an UPPER BOUND, not a reachable total: the Worker also charges per_image_overhead_bytes of JSON punctuation per image, so a form must leave room for that too or pass its own check and be refused anyway.",
+      "what_a_caller_does_with_it": "A form multiplies the size of each image chosen by 4/3, adds per_image_overhead_bytes once per image, adds them all, and shows the running total against max_request_bytes before the send. The per-image term is part of the arithmetic, not a rounding detail: a total that omits it can pass the form's own check and still be refused, which is the outcome criterion 2 exists to prevent. The ceiling is on the body, so it is shared and it is spent by every reference equally.",
+      "over_ceiling": "A Job over the ceiling is refused as invalid_request with retryable false, and the message names the size the Job would have sent AND the ceiling actually in force at that Worker — the value in force rather than this published default, because a deployment may have lowered it. The refusal happens before any file is written into the engine's input directory and before any graph is submitted, so an over-budget Job costs a Job and nothing else."
+    },
+    "result_window": {
+      "minutes": 30,
+      "approximate": true,
+      "applies_to": "the async /run path",
+      "sync_path_minutes": 1,
+      "source": "the platform's documentation",
+      "measured": false,
+      "probe": "#31/C8",
+      "caveat": "This is the platform's documented figure, not one this repository has measured, and the Probe that would settle it (#31/C8) is open. Treat it as unmeasured: a caller must not build a retention promise on it, because an assumption resting on nothing is exactly what this project has been burned by before.",
+      "which_path_matters": "A Job submitted through /run is retrievable for about `minutes`; one submitted through /runsync for about `sync_path_minutes`, which is about thirty times shorter. A caller reading 30 on the sync path would be wrong by a factor of thirty, so which path a submission used decides which figure applies. This Endpoint's own contract is written around the async path, which is the one a browser interface submits through."
+    },
+    "expired_result": {
+      "not_retrievable": true,
+      "is_a_design_choice": true,
+      "owner": "the platform",
+      "explain_to_caller": "A Result that is gone is not a bug and not something this Endpoint lost. The Worker returns the image inline and persists nothing, and Runpod discards the result when the window above closes — so a caller who arrives late has not lost a reply, and there is nothing to retry and nothing to escalate to the owner.",
+      "alternative": "Keeping a result longer means copying it out of the Result into object storage the caller owns. #27 scopes that out as a separate decision with its own cost, so it is named here rather than offered: it is the caller's to weigh, and it is not something this Endpoint does."
+    },
+    "parameter_bounds_kinds": {
+      "min": "the fewest values a Job may supply",
+      "max": "the most values a Job may supply; absent when nothing sets one",
+      "max_file_bytes": "the largest ONE file one value may fetch, in bytes"
+    },
+    "parameter_bounds": {
+      "edit/denoise": { "min": 0.0, "max": 1.0 },
+      "edit/reference_images": { "min": 1, "max": 16 },
+      "edit/loras": { "min": 0, "max_file_bytes": 1073741824 },
+      "background_removal/denoise": { "min": 0.0, "max": 1.0 },
+      "background_removal/reference_images": { "min": 1, "max": 16 },
+      "t2i/denoise": { "min": 0.0, "max": 1.0 },
+      "t2i/loras": { "min": 0, "max_file_bytes": 1073741824 }
+    },
+    "parameter_bounds_note": "Carried here so a form knows what a Workflow accepts without a second copy of the Registry's knowledge. min and max count VALUES; max_file_bytes bounds ONE file and is a different kind of bound, which is why a loras row has no max — the engine imposes no ceiling on how many LoRAs a Job may name, and inventing one would refuse work the Endpoint can do (ADR-0006, amendment 3). A Job-level bound such as the payload ceiling above is NOT a Parameter bound and appears in neither. These values are checked against the generated Registry by tests/test_contract_limits.py, so the two cannot drift."
+  },
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": ["workflow", "parameters"],
+      "additionalProperties": false,
+      "description": "The Job Input. `parameters` is a map keyed by the Workflow's OWN declared Parameters, which the Registry publishes and this artifact deliberately does not restate.",
+      "properties": {
+        "workflow": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The name of a Workflow in the Registry. An unknown name is refused by name, with the known ones listed, rather than accepted and failed later."
+        },
+        "workflow_version": {
+          "type": ["string", "null"],
+          "description": "Optional. Pin one Workflow version to reproduce an earlier result. Omitted or null takes the current one, which is what routine use should do. The key is `workflow_version`, matching what the Worker reads."
+        },
+        "expected_registry_revision": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional Job-envelope precondition. When supplied, the Worker runs only if the loaded Registry source.commit exactly matches this value. A mismatch is refused before Reference uploads, LoRA Fetches, graph construction or engine submission as endpoint_unavailable with retryable=true, and the human-safe error names both expected and actual revisions."
+        },
+        "parameters": {
+          "type": "object",
+          "description": "The Workflow's own Parameters. An undeclared name is refused as invalid_request rather than silently dropped. A value is checked against its declared type and never converted: a numeric string, a boolean where a number belongs, a fraction where a whole number belongs, and a null (other than the seed, where null asks for a random one) are refused as invalid_request. Version 4.0.0 tightened this, so a caller that sent such a value under 3.0.0 must correct it.",
+          "additionalProperties": true
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "required": ["filename", "data", "type"],
+      "additionalProperties": false,
+      "description": "One image, inline. `data` is base64 WITHOUT a data: prefix; the caller re-adds one when writing to a browser.",
+      "properties": {
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The name the engine stored the file under, which for an edited image is the name the engine RETURNED rather than the one that was sent. Never a value to parse: extensions vary, and the name is provenance, not structure."
+        },
+        "data": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "description": "The engine's own category for the file, passed through unchanged ('output' for a generated image, 'input' for one a reference slot re-reads). Carried because the engine names it and dropping it would leave a caller unable to tell a generated file from a re-read input; it is NOT an enum this Endpoint chose and must not be validated as one."
+        }
+      }
+    },
+    "response": {
+      "type": "object",
+      "required": ["images", "seed", "workflow", "registry_revision", "undeclared_inputs"],
+      "additionalProperties": false,
+      "description": "The Job's output on success. `additionalProperties: false` is load-bearing, and it is why this shape gains no fields casually. It is what makes 'a Refusal carries no image' a property of the shape rather than a convention — but it also means **any new response field is a breaking change**, because a caller that vendored this description holds its own copy with `false` and would reject every Result the moment a field appeared, however additive the field itself is. A contract cannot relax a constraint a caller has already taken a copy of. So a field here is a version bump and a re-vendor, and #36 keeps the contract's identity in `contract_version` on the artifact rather than on the Result for exactly this reason.",
+      "properties": {
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "description": "One Job produces exactly one image (ADR-0004). The array is the shape, not a batch: looping is the caller's job.",
+          "items": { "$ref": "#/$defs/image" }
+        },
+        "seed": {
+          "type": "integer",
+          "description": "The seed the run actually used, present whether or not the caller supplied one, so any result is reproducible. Range 1..2^63-1."
+        },
+        "resolved_prompt": {
+          "type": ["string", "null"],
+          "description": "The prompt the encoder received, after PE enhancement. Null on a Workflow that declares no preview node — `background_removal` has no enhancer. This is the ONE field that is explicitly null rather than absent, and the nullness is the signal: a caller can render the slot unconditionally and know that nothing was there to report."
+        },
+        "workflow": {
+          "type": "object",
+          "required": ["name", "version"],
+          "additionalProperties": false,
+          "description": "Which Workflow ran, so a result is self-describing without the caller holding the request.",
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "version": { "type": "string", "minLength": 1 }
+          }
+        },
+        "registry_revision": {
+          "type": ["string", "null"],
+          "description": "The commit the Registry was generated from — the git sha in the artifact's source.commit, NOT a content hash of the graph. The per-Workflow content hash is a different value (graph_hash) and lives in the Registry. Null only on a Registry generated but never published, which is a valid state and not an error."
+        },
+        "undeclared_inputs": {
+          "type": "array",
+          "description": "Input names the Workflow's own graph carried that their node class does not declare, and this Worker sent anyway because the engine gives no way to tell frontend widget state from a typo (ADR-0006). Always present, empty for a Workflow whose graph is entirely declared, so the shape does not vary by Workflow. A non-empty value means the run's settings may not be what the graph claims."
+        }
+      }
+    },
+    "refusal": {
+      "type": "object",
+      "required": ["error", "error_code", "retryable"],
+      "additionalProperties": false,
+      "description": "The one shape a Job takes when it ends without an image (ADR-0010). `error` is a plain sentence and never a structure: Runpod lifts the `error` key out of a returned mapping to mark the Job FAILED, and a structure there would be indistinguishable from the platform's own document for an uncaught exception — which is exactly how a caller tells 'the Worker refused' from 'the Worker broke'.",
+      "properties": {
+        "error": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A sentence for a person. Never parsed by a caller; the code beside it is what is machine-readable."
+        },
+        "error_code": {
+          "enum": ["invalid_request", "generation_failed", "endpoint_unavailable", "worker_failure"],
+          "description": "invalid_request: the caller's mistake, unfixable by retrying. generation_failed: the engine refused or the run failed inside it. endpoint_unavailable: the Registry or the engine could not be reached — the only retryable one. worker_failure: this Worker cannot do its job and no request a caller sends changes that."
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "A FIELD, not something derived from the code: leaving each caller to derive it is how two repositories come to disagree about what a code means. It is the only question a wait screen asks."
+        }
+      }
+    },
+    "job_state": {
+      "type": "string",
+      "description": "A Job state as Runpod reports it. Non-terminal states are IN_QUEUE and IN_PROGRESS. The terminal set is the platform's and is named here rather than described generically."
+    },
+    "terminal_states": {
+      "type": "array",
+      "description": "The terminal Job states. An UNRECOGNISED value is treated as NON-TERMINAL, so a state added upstream cannot silently end a caller's wait. A caller must apply the same rule: a wait ends on a state it recognises as terminal, never on the absence of one it recognises as running.",
+      "items": { "$ref": "#/$defs/job_state" }
+    }
+  },
+  "job_states": {
+    "note": "Runpod's Job states, not the engine's Run states (GLOSSARY.md keeps the two apart, and both travel as `status` in the payloads they appear in, which is why they are two terms). This Endpoint translates a Run state into a Job state and a Run state never crosses this boundary as itself.",
+    "non_terminal": ["IN_QUEUE", "IN_PROGRESS"],
+    "terminal": ["COMPLETED", "FAILED", "CANCELLED"],
+    "unknown_is_terminal": false,
+    "unknown_is_terminal_rationale": "Measured on this platform's own accounting: a refusal is a FAILED Job, because Runpod lifts the `error` key out of a returned mapping (ADR-0010). The inverse rule is stated because it is the one that bites — treating an unrecognised state as finished returns a result from a run that has not finished, and a state the platform adds later would do so silently.",
+    "cancellation": "A caller cancels a Job through the platform, not through this Endpoint — the platform owns the cancel route (`POST /v2/{endpoint_id}/cancel/{job_id}`) and this Endpoint never sees the call. A cancelled Job is CANCELLED, a terminal state, and is distinct from FAILED. The **state is observed, never assumed**: a client reports CANCELLED only after reading it back from the platform, because a cancel that is accepted and does not stop the Job would otherwise leave a caller believing a Worker had been released while it is still held. **A cancellation is not a Refusal and carries no refusal triple** — no `error_code`, no `retryable` — so a wait screen is not told to retry a Job the person abandoned; `state` is what tells a cancellation apart from a failure. The platform may serve a `CANCELLED` payload carrying an `error` key, and the client deliberately does not pass that key's `code` or `retryable` through. The client that makes the call is `registry/client.py` (#39/C4), beside submit, poll and decode.",
+    "result_window": "How long a finished result stays retrievable is Runpod's, and NOT measured by this repository (#31/C8 is an open Probe). The figures and the caveat are in `limits.result_window`, which is the only place they are stated — a Job state is a state, and duplicating the window here is how two copies of one number come to disagree. A caller must not build a retention promise on it: treat it as unmeasured until the Probe lands."
+  }
+}

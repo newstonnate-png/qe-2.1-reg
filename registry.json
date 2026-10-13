@@ -1,8 +1,8 @@
 {
-  "schema": 1,
+  "schema": 2,
   "source": {
     "branch": "main",
-    "commit": "f43d269f476402a4f89b1e3626f6b335b414ea28",
+    "commit": "fe8ceffec2b864d7ce39bb64dfae1342e2d7fcb4",
     "repo": "https://github.com/newstonnate-png/qwen-2.1-runpod-serverless"
   },
   "workflows": {
@@ -215,6 +215,11 @@
         },
         "cfg": {
           "default": 1,
+          "presentation": {
+            "description": "How closely the image follows the prompt.",
+            "importance": "advanced",
+            "label": "Guidance scale"
+          },
           "targets": [
             {
               "input": "cfg",
@@ -257,6 +262,11 @@
           "default": 1.0,
           "max": 1.0,
           "min": 0.0,
+          "presentation": {
+            "description": "How much of the picture is repainted. 1 repaints all of it.",
+            "importance": "advanced",
+            "label": "Denoise strength"
+          },
           "targets": [
             {
               "input": "denoise",
@@ -337,6 +347,11 @@
         },
         "prompt": {
           "default": "Remove the background, and output a PNG image",
+          "presentation": {
+            "description": "Tells the editor what to do. The default is the Workflow's own instruction, to remove the background.",
+            "importance": "advanced",
+            "label": "Instruction"
+          },
           "targets": [
             {
               "input": "prompt",
@@ -354,6 +369,11 @@
           },
           "max": 16,
           "min": 1,
+          "presentation": {
+            "description": "The image whose background is repainted.",
+            "importance": "primary",
+            "label": "Image"
+          },
           "targets": [
             {
               "from": 1,
@@ -371,6 +391,11 @@
         },
         "sampler_name": {
           "default": "euler",
+          "presentation": {
+            "description": "The sampling algorithm.",
+            "importance": "advanced",
+            "label": "Sampler"
+          },
           "targets": [
             {
               "input": "sampler_name",
@@ -425,6 +450,11 @@
         },
         "scheduler": {
           "default": "simple",
+          "presentation": {
+            "description": "The noise schedule the sampler follows.",
+            "importance": "advanced",
+            "label": "Scheduler"
+          },
           "targets": [
             {
               "input": "scheduler",
@@ -445,6 +475,11 @@
           ]
         },
         "seed": {
+          "presentation": {
+            "description": "The same seed and settings reproduce the same image. Leave it out for a random seed.",
+            "importance": "advanced",
+            "label": "Seed"
+          },
           "targets": [
             {
               "input": "seed",
@@ -455,6 +490,11 @@
         },
         "steps": {
           "default": 25,
+          "presentation": {
+            "description": "How many sampling steps to run. More steps take longer.",
+            "importance": "advanced",
+            "label": "Steps"
+          },
           "targets": [
             {
               "input": "steps",
@@ -513,6 +553,10 @@
           ],
           "type": "integer"
         }
+      },
+      "presentation": {
+        "description": "Repaints a reference image with a different background. It is image-to-image: the result is a new render, not a cut-out of the subject.",
+        "label": "Remove background"
       },
       "version": "1.0.0"
     },
@@ -837,6 +881,11 @@
         },
         "cfg": {
           "default": 1,
+          "presentation": {
+            "description": "How closely the image follows the prompt.",
+            "importance": "advanced",
+            "label": "Guidance scale"
+          },
           "targets": [
             {
               "input": "cfg",
@@ -879,6 +928,11 @@
           "default": 1.0,
           "max": 1.0,
           "min": 0.0,
+          "presentation": {
+            "description": "How much of the picture is repainted. 1 repaints all of it.",
+            "importance": "advanced",
+            "label": "Denoise strength"
+          },
           "targets": [
             {
               "input": "denoise",
@@ -899,6 +953,11 @@
         },
         "enhance_prompt": {
           "default": false,
+          "presentation": {
+            "description": "Rewrites the prompt with the prompt enhancer before it is sampled. Off by default.",
+            "importance": "advanced",
+            "label": "Enhance prompt"
+          },
           "targets": [
             {
               "input": "switch",
@@ -930,6 +989,11 @@
         "loras": {
           "max_file_bytes": 1073741824,
           "min": 0,
+          "presentation": {
+            "description": "Style weights to apply, each a URL and a strength.",
+            "importance": "primary",
+            "label": "Styles (LoRAs)"
+          },
           "slot": {
             "lora": "{value}",
             "on": true,
@@ -1150,6 +1214,11 @@
         },
         "prompt": {
           "default": "Replace costumes for the character",
+          "presentation": {
+            "description": "Tells the editor what to change in the reference image. It is an instruction, not a description of the result.",
+            "importance": "primary",
+            "label": "Instruction"
+          },
           "targets": [
             {
               "input": "on_false",
@@ -1171,6 +1240,11 @@
           },
           "max": 16,
           "min": 1,
+          "presentation": {
+            "description": "The images to edit.",
+            "importance": "primary",
+            "label": "Reference images"
+          },
           "targets": [
             {
               "from": 1,
@@ -1194,6 +1268,11 @@
         },
         "sampler_name": {
           "default": "euler",
+          "presentation": {
+            "description": "The sampling algorithm.",
+            "importance": "advanced",
+            "label": "Sampler"
+          },
           "targets": [
             {
               "input": "sampler_name",
@@ -1248,6 +1327,11 @@
         },
         "scheduler": {
           "default": "simple",
+          "presentation": {
+            "description": "The noise schedule the sampler follows.",
+            "importance": "advanced",
+            "label": "Scheduler"
+          },
           "targets": [
             {
               "input": "scheduler",
@@ -1268,6 +1352,11 @@
           ]
         },
         "seed": {
+          "presentation": {
+            "description": "The same seed and settings reproduce the same image. Leave it out for a random seed.",
+            "importance": "advanced",
+            "label": "Seed"
+          },
           "targets": [
             {
               "input": "seed",
@@ -1308,6 +1397,11 @@
         },
         "steps": {
           "default": 25,
+          "presentation": {
+            "description": "How many sampling steps to run. More steps take longer.",
+            "importance": "advanced",
+            "label": "Steps"
+          },
           "targets": [
             {
               "input": "steps",
@@ -1366,6 +1460,10 @@
           ],
           "type": "integer"
         }
+      },
+      "presentation": {
+        "description": "Edits a reference image as the instruction says. The prompt is an instruction to the editor, not a description of the result.",
+        "label": "Edit image"
       },
       "preview_node": "459:480",
       "version": "1.0.0"
@@ -1621,6 +1719,11 @@
       "parameters": {
         "aspect_ratio": {
           "default": "1:1 (Square)",
+          "presentation": {
+            "description": "The shape of the image, such as 1:1 or 16:9.",
+            "importance": "primary",
+            "label": "Aspect ratio"
+          },
           "targets": [
             {
               "input": "aspect_ratio",
@@ -1671,6 +1774,11 @@
         },
         "cfg": {
           "default": 1,
+          "presentation": {
+            "description": "How closely the image follows the prompt.",
+            "importance": "advanced",
+            "label": "Guidance scale"
+          },
           "targets": [
             {
               "input": "cfg",
@@ -1713,6 +1821,11 @@
           "default": 1.0,
           "max": 1.0,
           "min": 0.0,
+          "presentation": {
+            "description": "How much of the picture is repainted. 1 repaints all of it.",
+            "importance": "advanced",
+            "label": "Denoise strength"
+          },
           "targets": [
             {
               "input": "denoise",
@@ -1733,6 +1846,11 @@
         },
         "enhance_prompt": {
           "default": false,
+          "presentation": {
+            "description": "Rewrites the prompt with the prompt enhancer before it is sampled. Off by default.",
+            "importance": "advanced",
+            "label": "Enhance prompt"
+          },
           "targets": [
             {
               "input": "switch",
@@ -1754,6 +1872,11 @@
         "loras": {
           "max_file_bytes": 1073741824,
           "min": 0,
+          "presentation": {
+            "description": "Style weights to apply, each a URL and a strength.",
+            "importance": "primary",
+            "label": "Styles (LoRAs)"
+          },
           "slot": {
             "lora": "{value}",
             "on": true,
@@ -1774,6 +1897,11 @@
         },
         "megapixels": {
           "default": 1,
+          "presentation": {
+            "description": "The image's area in megapixels.",
+            "importance": "primary",
+            "label": "Size"
+          },
           "targets": [
             {
               "input": "megapixels",
@@ -1984,6 +2112,11 @@
         },
         "prompt": {
           "default": "Greyscale fashion editorial portrait of an avant-garde woman tilted upwards in profile, captured with striking high-contrast chiaroscuro lighting. She wears oversized, thick-rimmed circular black sunglasses with matte dark lenses, concealing her upward gaze. Her attire merges high couture with tactical abstraction: a high-necked structural dress tailored from heavyweight fabric featuring a disrupted optical camouflage pattern—interlocking oversized polka dots, pixelated stippling, and organic contour blotches in stark monochrome that mimic military disruptive patterns in a refined runway style. Around her shoulders, asymmetric pleated webbing and tailored cargo straps are integrated seamlessly into the garment’s architecture. In her gloved hand, she clutches a structured matte-leather geometric handbag accented with subtle tactical buckles, utility stitching, and dark brushed-metal hardware. Her skin texture is rendered with hyper-detailed clarity, sculpted by intense, razor-sharp studio key light and deep graphite shadows. The striking background is a vivid mixed-media graphic collage, composed of flat vibrant lime green planes, stark black and white overlapping circles, segmented semi-circles with bold zebra striping, dense micro-halftone dot matrices, and vector topographic contour lines. The clash between monochromatic disruptive camo elements on her clothing and the saturated, retro-futuristic pop-art backdrop creates an intense visual dissonance, emphasizing sharp silhouettes, paper cut-out edges, dynamic compositional balance, and clean graphic novel textures. Absolutely no text, no typography, no letters, no words, no numbers, no logos, no watermark, no captions, pure imagery only.",
+          "presentation": {
+            "description": "Describes the image to generate.",
+            "importance": "primary",
+            "label": "Prompt"
+          },
           "targets": [
             {
               "input": "on_false",
@@ -1998,6 +2131,11 @@
         },
         "sampler_name": {
           "default": "euler",
+          "presentation": {
+            "description": "The sampling algorithm.",
+            "importance": "advanced",
+            "label": "Sampler"
+          },
           "targets": [
             {
               "input": "sampler_name",
@@ -2052,6 +2190,11 @@
         },
         "scheduler": {
           "default": "simple",
+          "presentation": {
+            "description": "The noise schedule the sampler follows.",
+            "importance": "advanced",
+            "label": "Scheduler"
+          },
           "targets": [
             {
               "input": "scheduler",
@@ -2072,6 +2215,11 @@
           ]
         },
         "seed": {
+          "presentation": {
+            "description": "The same seed and settings reproduce the same image. Leave it out for a random seed.",
+            "importance": "advanced",
+            "label": "Seed"
+          },
           "targets": [
             {
               "input": "seed",
@@ -2092,6 +2240,11 @@
         },
         "steps": {
           "default": 25,
+          "presentation": {
+            "description": "How many sampling steps to run. More steps take longer.",
+            "importance": "advanced",
+            "label": "Steps"
+          },
           "targets": [
             {
               "input": "steps",
@@ -2130,6 +2283,10 @@
           ],
           "type": "string"
         }
+      },
+      "presentation": {
+        "description": "Generates one image from a written description. Give it a prompt, and optionally a size, a style (LoRA) and the sampler settings.",
+        "label": "Text to image"
       },
       "preview_node": "459:472",
       "version": "1.0.0"
